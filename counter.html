@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mrgamji Counter - Save and track your count">
+    <meta name="keywords" content="counter, save, database, Islamic counting, tasbih">
+    <title>Mrgamji Counter - Islamic Counting App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --background-color: #ecf0f1;
+            --text-color: #2c3e50;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            position: relative;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .counter-panel {
+            margin-top: 2rem;
+        }
+
+        .counter {
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .ai-search-box {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .ai-search-box input {
+            width: 70%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .ai-search-box button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .ai-suggestion {
+            margin-top: 15px;
+            font-style: normal;
+            color: #34495e;
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--primary-color);
+            padding: 10px 15px;
+            border-radius: 0 5px 5px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+            line-height: 1.5;
+            transition: all 0.3s ease;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .ai-suggestion:hover {
+            background-color: #e9ecef;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-menu {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .profile-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .profile-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 120px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+
+        .dropdown-menu a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: var(--background-color);
+        }
+
+        .show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <!-- ... existing header content ... -->
+        </header>
+        <div class="user-menu">
+            <button class="profile-button" onclick="toggleDropdown()">
+                <div class="profile-icon">U</div>
+            </button>
+            <div id="dropdownMenu" class="dropdown-menu">
+                <a href="#profile">Profile</a>
+                <a href="#settings">Settings</a>
+                <a href='logout.php'>Logout</a>
+            </div>
+        </div>
+        <main>
+            <h1>Mrgamji Counter</h1>
+            <div class="ai-search-box">
+                <form onsubmit="getAISuggestion(); return false;">
+                    <input type="text" id="ai-input" placeholder="Ask for a tasbih suggestion..." required>
+                    <button type="submit">Get Suggestion</button>
+                </form>
+                <p class="ai-suggestion" id="ai-suggestion"></p>
+            </div>
+            <div class="counter-panel">
+                <div class="counter" id="counter">0</div>
+                <div class="button-group">
+                    <button class="add" onclick="increment()">Count</button>
+                    <button onclick="reset()">Reset</button>
+                    <button onclick="saveCount()">Save</button>
+                    <button onclick="getPreviousCount()">Previous Count</button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        let count = 0;
+
+        function increment() {
+            count++;
+            updateCounter();
+        }
+
+        function reset() {
+            count = 0;
+            updateCounter();
+        }
+
+        function updateCounter() {
+            document.getElementById('counter').textContent = count;
+        }
+
+        function saveCount() {
+            // Implement save functionality here
+            console.log('Count saved:', count);
+        }
+
+        function getPreviousCount() {
+            // Implement previous count retrieval here
+            console.log('Getting previous count');
+        }
+
+        function logout() {
+            // Implement logout functionality here
+            console.log('User logged out');
+        }
+
+        function toggleDropdown() {
+            document.getElementById("dropdownMenu").classList.toggle("show");
+        }
+
+        // Close the dropdown menu if the user clicks outside of it
+        window.onclick = function(event) {
+            if (!event.target.matches('.profile-button') && !event.target.matches('.profile-icon')) {
+                var dropdowns = document.getElementsByClassName("dropdown-menu");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+
+        async function getAISuggestion() {
+            const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+            const apiKey = 'AIzaSyC8_Vm2E6elmmdBtkq_YamPZcdRka-D3cU';
+            const input = document.getElementById('ai-input').value;
+            const suggestionElement = document.getElementById('ai-suggestion');
+            suggestionElement.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(`${apiUrl}?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [
+                            {
+                                parts: [
+                                    {
+                                        text: input
+                                    }
+                                ]
+                            }
+                        ]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+
+                const data = await response.json();
+                suggestionElement.textContent = data.candidates[0].content.parts[0].text;
+            } catch (error) {
+                console.error('Error:', error);
+                suggestionElement.textContent = 'Failed to get suggestion. Please try again.';
+            }
+        }
+    </script>
+</body>
+</html>
